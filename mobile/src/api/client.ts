@@ -2,7 +2,7 @@ import { Clinic, Patient, Specialization, Appointment, AppointmentWithDetails, A
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const BASE_URL = "https://projeto-lp-6.onrender.com";
+export const BASE_URL = "https://backend-psi-steel-82.vercel.app";
 
 const TOKEN_KEY = '@clinica:token';
 

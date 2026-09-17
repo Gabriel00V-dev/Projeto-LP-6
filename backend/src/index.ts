@@ -64,6 +64,12 @@ app.use('/appointments',  appointmentsRouter);
 app.use('/documents',     documentsRouter);
 app.use('/addons',        addonsRouter);        // novo
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// Em ambiente serverless (Vercel) o app é exportado e invocado por request,
+// sem precisar escutar uma porta.
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+export default app;

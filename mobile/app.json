@@ -24,6 +24,10 @@
         "backgroundColor": "#FFFFFF"
       }
     },
-    "scheme": "gerenciamento-clinicas"
+    "scheme": "gerenciamento-clinicas",
+    "plugins": [
+      "expo-font",
+      "expo-status-bar"
+    ]
   }
 }

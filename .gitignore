@@ -87,6 +87,9 @@ build/
 
 # Backend specific environment files
 #backend/.env
+
+# Vercel
+.vercel
 #backend/.env.local
 
 # Upload directories (should not be in repo)
