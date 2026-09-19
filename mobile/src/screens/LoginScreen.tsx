@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import ModernInput from "../components/ModernInput";
 import ModernButton from "../components/ModernButton";
+import { getErrorMessage } from "../utils/errorMessage";
 import {
   colors,
   spacing,
@@ -64,9 +65,10 @@ export default function LoginScreen({ navigation }: Props) {
       }
     } catch (err: any) {
       console.error("Login Error:", err);
-      const errorMessage =
-        err?.response?.data?.error ||
-        "Não foi possível fazer o login. Verifique sua conexão e credenciais.";
+      const errorMessage = getErrorMessage(
+        err,
+        "Não foi possível fazer o login. Verifique sua conexão e credenciais."
+      );
       Alert.alert("Erro", errorMessage);
     } finally {
       setLoading(false);

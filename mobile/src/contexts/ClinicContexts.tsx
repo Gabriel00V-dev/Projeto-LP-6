@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL, getStoredToken } from '../api/client';
+import { getErrorMessage } from '../utils/errorMessage';
 
 export type Plano = 'basico' | 'profissional' | 'enterprise';
 
@@ -128,10 +129,10 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
           trial_ativo: true,
           addons: { ...prev.addons, addon_telemedicina: true, addon_pdf: true },
         } : prev);
-        return { success: true, message: data.message };
+        return { success: true, message: getErrorMessage(data, 'Trial ativado com sucesso.') };
       }
 
-      return { success: false, message: data.error ?? 'Erro ao ativar trial.' };
+      return { success: false, message: getErrorMessage(data, 'Erro ao ativar trial.') };
     } catch {
       return { success: false, message: 'Erro de conexão.' };
     }

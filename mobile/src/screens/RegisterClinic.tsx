@@ -24,6 +24,7 @@ import {
   borderRadius,
 } from "../styles/theme";
 import { authRegister, uploadImage } from "../api/client";
+import { getErrorMessage } from "../utils/errorMessage";
 
 type Props = {
   navigation: any;
@@ -74,8 +75,7 @@ export default function RegisterClinic({ navigation }: Props) {
         { text: "Ir para Login", onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      const errorMessage =
-        err?.response?.data?.error || "Não foi possível cadastrar a clínica.";
+      const errorMessage = getErrorMessage(err, "Não foi possível cadastrar a clínica.");
       Alert.alert("Erro no Cadastro", errorMessage);
     } finally {
       setLoading(false);

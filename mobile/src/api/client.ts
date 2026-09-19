@@ -2,7 +2,9 @@ import { Clinic, Patient, Specialization, Appointment, AppointmentWithDetails, A
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const BASE_URL = "https://backend-psi-steel-82.vercel.app";
+// Domínio de produção do projeto (alias estável). A URL com hash que a Vercel
+// mostra a cada deploy muda toda vez — não serve para o app.
+export const BASE_URL = "https://backend-gabriel00souzavasconcelos-1989s-projects.vercel.app";
 
 const TOKEN_KEY = '@clinica:token';
 

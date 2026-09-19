@@ -14,6 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import ModernInput from "../components/ModernInput";
 import ModernButton from "../components/ModernButton";
+import { getErrorMessage } from "../utils/errorMessage";
 import {
   colors,
   spacing,
@@ -66,9 +67,10 @@ export default function RegisterPatient({ navigation }: Props) {
       ]);
     } catch (err: any) {
       console.error("Registration Error:", err);
-      const errorMessage =
-        err?.response?.data?.error ||
-        "Não foi possível realizar o cadastro. Tente novamente.";
+      const errorMessage = getErrorMessage(
+        err,
+        "Não foi possível realizar o cadastro. Tente novamente."
+      );
       Alert.alert("Erro no Cadastro", errorMessage);
     }
   }

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import ws from "ws";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -7,4 +8,7 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error("SUPABASE_URL e SUPABASE_KEY são obrigatórias no arquivo .env");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Node < 22 não tem WebSocket nativo; o realtime-js precisa do transport explícito
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  realtime: { transport: ws as any },
+});

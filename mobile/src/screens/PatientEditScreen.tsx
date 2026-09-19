@@ -19,6 +19,7 @@ import {
   borderRadius,
 } from "../styles/theme";
 import { updatePatient } from "../api/client";
+import { getErrorMessage } from "../utils/errorMessage";
 import {
   formatDateInput,
   convertDateToISO,
@@ -86,9 +87,10 @@ export default function PatientEditScreen({ navigation, route }: Props) {
       ]);
     } catch (err: any) {
       console.error("Update Error:", err);
-      const errorMessage =
-        err?.response?.data?.error ||
-        "Não foi possível atualizar os dados. Tente novamente.";
+      const errorMessage = getErrorMessage(
+        err,
+        "Não foi possível atualizar os dados. Tente novamente."
+      );
       Alert.alert("Erro na Atualização", errorMessage);
     } finally {
       setLoading(false);
