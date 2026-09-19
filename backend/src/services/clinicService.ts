@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { semSenha } from '../utils/sanitize';
 
 function isMissingAtendeUnimedColumnError(message?: string): boolean {
   const text = (message || '').toLowerCase();
@@ -21,10 +22,12 @@ function normalizeClinic(row: any) {
           ? row.trabalha_com_horario
         : false;
 
-  return {
+  // Todo caminho de leitura e escrita de clínica passa por aqui, então é o
+  // lugar certo para garantir que a senha nunca saia na resposta.
+  return semSenha({
     ...row,
     atende_unimed: atendeUnimed,
-  };
+  });
 }
 
 export interface ClinicData {

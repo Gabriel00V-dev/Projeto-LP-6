@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { semSenha, semSenhaLista } from '../utils/sanitize';
 
 export interface PatientData {
   nome: string;
@@ -28,7 +29,7 @@ export class PatientService {
       throw new Error(error.message);
     }
 
-    return data;
+    return semSenhaLista(data);
   }
 
   async getPatientById(codigo: number) {
@@ -46,7 +47,7 @@ export class PatientService {
       throw new Error(error.message);
     }
 
-    return data;
+    return semSenha(data);
   }
 
   async createPatient(patientData: PatientData) {
@@ -68,7 +69,7 @@ export class PatientService {
       throw new Error(error.message);
     }
 
-    return data;
+    return semSenha(data);
   }
 
   async updatePatient(codigo: number, updateData: UpdatePatientData) {
@@ -97,7 +98,7 @@ export class PatientService {
       throw new Error(error.message);
     }
 
-    return data;
+    return semSenha(data);
   }
 
   async deletePatient(codigo: number) {
