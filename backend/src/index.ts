@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
-import { supabase } from './supabaseClient';
+import { supabase, missingEnvVars } from './supabaseClient';
 
 import patientsRouter       from './routes/patients';
 import clinicsRouter        from './routes/clinics';
@@ -25,7 +25,21 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (_req: Request, res: Response) => {
-  res.json({ message: 'Clinica API (TypeScript) - ok' });
+  res.json({
+    message: 'Clinica API (TypeScript) - ok',
+    supabase: missingEnvVars.length === 0 ? 'configurado' : 'sem configuração',
+  });
+});
+
+// Sem as credenciais do Supabase nada funciona. Responder aqui, com a lista do
+// que falta, evita um 500 sem explicação em cada rota.
+app.use((_req: Request, res: Response, next) => {
+  if (missingEnvVars.length > 0) {
+    return res.status(503).json({
+      error: `Configuração ausente no servidor: ${missingEnvVars.join(', ')}`,
+    });
+  }
+  next();
 });
 
 // Upload de imagens para o Supabase Storage
