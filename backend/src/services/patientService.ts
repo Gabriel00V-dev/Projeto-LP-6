@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { semSenha, semSenhaLista } from '../utils/sanitize';
+import { alterarSenhaNoAuth, alterarEmailNoAuth } from './authAccountService';
 
 export interface PatientData {
   nome: string;
@@ -51,13 +52,15 @@ export class PatientService {
   }
 
   async createPatient(patientData: PatientData) {
-    const { nome, datan, fone, ende, email, senha } = patientData;
+    const { nome, datan, fone, ende, email } = patientData;
 
-    if (!nome || !email || !senha) {
-      throw new Error('Dados incompletos: nome, email e senha são obrigatórios');
+    if (!nome || !email) {
+      throw new Error('Dados incompletos: nome e email são obrigatórios');
     }
 
-    const payload = { nome, datan, fone, ende, email, senha };
+    // Este endpoint apenas insere a linha; ele não cria conta de acesso. Para
+    // um paciente que consiga fazer login, o caminho é POST /auth/register.
+    const payload = { nome, datan, fone, ende, email };
 
     const { data, error } = await supabase
       .from('pacientes')
@@ -72,12 +75,23 @@ export class PatientService {
     return semSenha(data);
   }
 
-  async updatePatient(codigo: number, updateData: UpdatePatientData) {
+  async updatePatient(codigo: number, updateData: UpdatePatientData, authUserId?: string) {
     if (Number.isNaN(codigo)) {
       throw new Error('Código inválido');
     }
 
     const { nome, datan, fone, ende, email, senha } = updateData;
+    const atual = await this.getPatientById(codigo);
+
+    // Senha e e-mail de login ficam no Auth. Atualizá-los antes da tabela
+    // garante que uma falha aqui não deixe os dois cadastros divergentes.
+    if (senha) {
+      await alterarSenhaNoAuth(authUserId, senha);
+    }
+    if (email !== undefined && email !== atual?.email) {
+      await alterarEmailNoAuth(authUserId, email);
+    }
+
     const update: any = {};
 
     if (nome !== undefined) update.nome = nome;
@@ -85,7 +99,6 @@ export class PatientService {
     if (fone !== undefined) update.fone = fone;
     if (ende !== undefined) update.ende = ende;
     if (email !== undefined) update.email = email;
-    if (senha !== undefined) update.senha = senha;
 
     const { data, error } = await supabase
       .from('pacientes')

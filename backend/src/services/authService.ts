@@ -104,16 +104,17 @@ export class AuthService {
       throw new Error(authError.message);
     }
 
-    // 2. Insere na tabela de domínio (pacientes ou clinicas)
+    // 2. Insere na tabela de domínio (pacientes ou clinicas). A senha não entra
+    // aqui: quem a guarda é o Supabase Auth, e a coluna não existe mais.
     const table = role === 'paciente' ? 'pacientes' : 'clinicas';
     let { data: entity, error: entityError } = await supabase
       .from(table)
-      .insert({ nome, email, senha, ...rest })
+      .insert({ nome, email, ...rest })
       .select()
       .single();
 
     if (entityError && role === 'clinica' && isMissingAtendeUnimedColumnError(entityError.message)) {
-      const payload = { nome, email, senha, ...rest } as any;
+      const payload = { nome, email, ...rest } as any;
       const { atende_unimed, ...legacyPayload } = payload;
       const fallbackPayload = {
         ...legacyPayload,

@@ -53,7 +53,9 @@ export class ClinicController {
     try {
       const codigo = Number(req.params.codigo);
       const updateData: UpdateClinicData = req.body;
-      const clinic = await clinicService.updateClinic(codigo, updateData);
+      // req.user vem do authenticate; é o id da conta no Supabase Auth, usado
+      // quando a atualização mexe em senha ou e-mail de login.
+      const clinic = await clinicService.updateClinic(codigo, updateData, req.user?.id);
       res.json(clinic);
     } catch (error: any) {
       const statusCode = error.message.includes('Código inválido') ? 400 : 400;

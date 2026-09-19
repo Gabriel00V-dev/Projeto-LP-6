@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { semSenha } from '../utils/sanitize';
+import { alterarSenhaNoAuth, alterarEmailNoAuth } from './authAccountService';
 
 function isMissingAtendeUnimedColumnError(message?: string): boolean {
   const text = (message || '').toLowerCase();
@@ -236,18 +237,19 @@ export class ClinicService {
   }
 
   async createClinic(clinicData: ClinicData) {
-    const { nome, endereco, fone, email, senha, imagem, atende_unimed } = clinicData;
+    const { nome, endereco, fone, email, imagem, atende_unimed } = clinicData;
 
-    if (!nome || !email || !senha) {
-      throw new Error('Dados incompletos: nome, email e senha são obrigatórios');
+    if (!nome || !email) {
+      throw new Error('Dados incompletos: nome e email são obrigatórios');
     }
 
+    // Este endpoint apenas insere a linha; ele não cria conta de acesso. Para
+    // uma clínica que consiga fazer login, o caminho é POST /auth/register.
     const payload = {
       nome,
       endereco,
       fone,
       email,
-      senha,
       imagem,
       atende_unimed: atende_unimed ?? false,
     };
@@ -298,19 +300,29 @@ export class ClinicService {
     return normalizeClinic(data);
   }
 
-  async updateClinic(codigo: number, updateData: UpdateClinicData) {
+  async updateClinic(codigo: number, updateData: UpdateClinicData, authUserId?: string) {
     if (Number.isNaN(codigo)) {
       throw new Error('Código inválido');
     }
 
     const { nome, endereco, fone, email, senha, imagem, atende_unimed } = updateData;
+    const atual = await this.getClinicById(codigo);
+
+    // Senha e e-mail de login ficam no Auth. Atualizá-los antes da tabela
+    // garante que uma falha aqui não deixe os dois cadastros divergentes.
+    if (senha) {
+      await alterarSenhaNoAuth(authUserId, senha);
+    }
+    if (email !== undefined && email !== atual?.email) {
+      await alterarEmailNoAuth(authUserId, email);
+    }
+
     const update: any = {};
 
     if (nome !== undefined) update.nome = nome;
     if (endereco !== undefined) update.endereco = endereco;
     if (fone !== undefined) update.fone = fone;
     if (email !== undefined) update.email = email;
-    if (senha !== undefined) update.senha = senha;
     if (imagem !== undefined) update.imagem = imagem;
     if (atende_unimed !== undefined) update.atende_unimed = atende_unimed;
 
