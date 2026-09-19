@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../supabaseClient';
+import { supabase, supabaseAuth } from '../supabaseClient';
 
 export interface AuthenticatedUser {
   id: string;
@@ -30,7 +30,7 @@ export async function authenticate(
     }
 
     const token = authHeader.split(' ')[1];
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
 
     if (error || !user) {
       res.status(401).json({ error: 'Token inválido ou expirado. Faça login novamente.', code: 'INVALID_TOKEN' });

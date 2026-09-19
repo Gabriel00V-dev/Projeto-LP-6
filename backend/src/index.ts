@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
-import { supabase, configErrors } from './supabaseClient';
+import { supabase, configErrors, usandoServiceRole } from './supabaseClient';
 
 import patientsRouter       from './routes/patients';
 import clinicsRouter        from './routes/clinics';
@@ -28,6 +28,7 @@ app.get('/', (_req: Request, res: Response) => {
   res.json({
     message: 'Clinica API (TypeScript) - ok',
     supabase: configErrors.length === 0 ? 'configurado' : 'sem configuração',
+    acessoAsTabelas: usandoServiceRole ? 'service_role' : 'anon (RLS pode barrar escritas)',
   });
 });
 

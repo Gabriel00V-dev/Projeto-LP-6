@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient';
+import { supabase, supabaseAuth, usandoServiceRole } from '../supabaseClient';
 
 function isMissingAtendeUnimedColumnError(message?: string): boolean {
   const text = (message || '').toLowerCase();
@@ -30,7 +30,7 @@ export class AuthService {
     }
 
     // 1. Autentica via Supabase Auth — gera o JWT real
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await supabaseAuth.auth.signInWithPassword({
       email,
       password: senha,
     });
@@ -44,7 +44,7 @@ export class AuthService {
 
     // Se o usuário foi cadastrado com role nos metadados, valida
     if (storedRole && storedRole !== role) {
-      await supabase.auth.signOut();
+      await supabaseAuth.auth.signOut();
       throw new Error(`Credenciais inválidas`);
     }
 
@@ -89,7 +89,7 @@ export class AuthService {
     }
 
     // 1. Cria o usuário no Supabase Auth com o role nos metadados
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
       email,
       password: senha,
       options: {
@@ -147,9 +147,26 @@ export class AuthService {
     }
 
     if (entityError) {
-      // Rollback: remove o usuário do Auth se falhar na tabela
+      // Rollback: sem isto, o usuário fica criado no Auth sem linha na tabela, e
+      // a próxima tentativa falha com "User already registered" — escondendo o
+      // erro real, que foi o insert. deleteUser exige a service_role.
       if (authData.user) {
-        await supabase.auth.admin?.deleteUser(authData.user.id).catch(() => {});
+        if (!usandoServiceRole) {
+          console.error(
+            '[register] Insert falhou e o rollback não pôde ser feito sem a ' +
+              `SUPABASE_SERVICE_ROLE_KEY. Usuário órfão no Auth: ${authData.user.email}`
+          );
+        } else {
+          const { error: rollbackError } = await supabase.auth.admin.deleteUser(
+            authData.user.id
+          );
+          if (rollbackError) {
+            console.error(
+              `[register] Falha ao remover o usuário órfão ${authData.user.email}:`,
+              rollbackError.message
+            );
+          }
+        }
       }
       throw new Error(entityError.message);
     }

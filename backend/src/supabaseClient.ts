@@ -14,6 +14,7 @@ function readEnv(name: string): string {
 
 const supabaseUrl = readEnv("SUPABASE_URL");
 const supabaseKey = readEnv("SUPABASE_KEY");
+const supabaseServiceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
 
 function isHttpUrl(value: string): boolean {
   try {
@@ -54,9 +55,36 @@ if (configErrors.length > 0) {
 }
 
 // Node < 22 não tem WebSocket nativo; o realtime-js precisa do transport explícito
-export const supabase: SupabaseClient =
-  configErrors.length > 0
+const clientOptions = { realtime: { transport: ws as any } };
+
+function build(key: string): SupabaseClient {
+  return configErrors.length > 0
     ? (null as unknown as SupabaseClient)
-    : createClient(supabaseUrl, supabaseKey, {
-        realtime: { transport: ws as any },
-      });
+    : createClient(supabaseUrl, key, clientOptions);
+}
+
+/**
+ * Cliente com a chave anon, usado apenas nas operações de autenticação
+ * (signUp, signInWithPassword, getUser). São justamente as que devem rodar com
+ * a chave pública: quem cria a conta é o usuário final, não o servidor.
+ */
+export const supabaseAuth: SupabaseClient = build(supabaseKey);
+
+/**
+ * Cliente usado para acessar as tabelas. Com a service_role ele passa pelo RLS,
+ * que é o esperado de um servidor confiável — o controle de acesso aqui é feito
+ * pelo authMiddleware, não pelas policies. Sem a service_role, cai na chave
+ * anon e qualquer INSERT barrado pelo RLS vai falhar.
+ */
+export const supabase: SupabaseClient = supabaseServiceRoleKey
+  ? build(supabaseServiceRoleKey)
+  : supabaseAuth;
+
+export const usandoServiceRole = Boolean(supabaseServiceRoleKey);
+
+if (!usandoServiceRole && configErrors.length === 0) {
+  console.warn(
+    "[config] SUPABASE_SERVICE_ROLE_KEY não definida: as tabelas serão acessadas " +
+      "com a chave anon e o RLS pode barrar escritas (cadastro, agendamento, upload)."
+  );
+}
