@@ -28,6 +28,12 @@
     "plugins": [
       "expo-font",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3d9095d6-a141-4a5c-a6f4-9043d3961bc7"
+      }
+    },
+    "owner": "mareles"
   }
 }
