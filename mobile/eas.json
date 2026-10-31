@@ -4,9 +4,11 @@
   },
   "build": {
     "production": {
+      "node": "24.22.2",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "channel": "production"
     }
   }
 }
