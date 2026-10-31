@@ -91,8 +91,9 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Chamado no LoginScreen após authLogin bem-sucedido
-  // accessToken já foi salvo pelo client.ts — passamos só para conveniência
+  // Chamado no LoginScreen após authLogin bem-sucedido, para clínica ou
+  // profissional: a assinatura é do prestador (o profissional vinculado recebe
+  // a da clínica). accessToken já foi salvo pelo client.ts — passamos só para conveniência
   const loadClinicSession = useCallback(async (clinicData: any, _accessToken: string) => {
     setLoading(true);
     setClinic(clinicData);

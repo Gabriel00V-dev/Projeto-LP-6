@@ -74,7 +74,7 @@ export default function NotificationsScreen({ route, navigation }: Props) {
           generatedNotifications.push({
             id: `reminder-1d-${apt.codigo}`,
             type: "reminder",
-            title: "🔔 Consulta Amanhã!",
+            title: "Consulta Amanhã!",
             message: `Sua consulta em ${apt.clinicas?.nome || apt.clinica_nome} está marcada para amanhã às ${formatTime(apt.data_hora)}. `,
             date: new Date(aptDate.getTime() - 24 * 60 * 60 * 1000),
             appointment: apt,
@@ -85,7 +85,7 @@ export default function NotificationsScreen({ route, navigation }: Props) {
           generatedNotifications.push({
             id: `confirmation-${apt.codigo}`,
             type: "confirmation",
-            title: "✅ Consulta Confirmada",
+            title: "Consulta Confirmada",
             message: `Sua consulta foi confirmada para ${formatDate(apt.data_hora)} em ${apt.clinicas?.nome || apt.clinica_nome}.`,
             date: new Date(),
             appointment: apt,
@@ -152,7 +152,7 @@ export default function NotificationsScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="light-content" />
       <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.header}>
         <Text style={styles.headerTitle}>Notificações</Text>
         <Text style={styles.headerSubtitle}>Lembretes e atualizações importantes</Text>

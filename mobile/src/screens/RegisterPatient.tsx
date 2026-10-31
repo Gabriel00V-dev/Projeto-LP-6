@@ -77,7 +77,7 @@ export default function RegisterPatient({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
         style={styles.headerGradient}

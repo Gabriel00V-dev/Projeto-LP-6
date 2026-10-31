@@ -13,8 +13,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, fontSize, fontWeight, borderRadius } from "../styles/theme";
 import ModernCard from "../components/ModernCard";
-import { getAppointmentsByPatient, updateAppointmentStatus } from "../api/client";
+import IconText from "../components/IconText";
+import { changeAppointment, getAppointmentsByPatient } from "../api/client";
 import { AppointmentWithDetails } from "../types";
+import { getErrorMessage } from "../utils/errorMessage";
+import { entrarNaTeleconsulta } from "../utils/telemedicine";
+import { parseDataHoraLocal, ROTULO_ATENDIMENTO, STATUS_CONSULTA } from "../utils/serviceFormat";
+
+const ENCERRADAS = ["cancelada", "concluida", "faltou"];
 
 type Props = {
   navigation: any;
@@ -59,11 +65,11 @@ export default function AppointmentsScreen({ route, navigation }: Props) {
           style: "destructive",
           onPress: async () => {
             try {
-              await updateAppointmentStatus(codigo, "cancelada");
+              await changeAppointment(codigo, "cancel");
               Alert.alert("Sucesso", "Consulta cancelada com sucesso");
               loadAppointments();
             } catch (error) {
-              Alert.alert("Erro", "Não foi possível cancelar a consulta");
+              Alert.alert("Erro", getErrorMessage(error, "Não foi possível cancelar a consulta"));
             }
           },
         },
@@ -71,41 +77,33 @@ export default function AppointmentsScreen({ route, navigation }: Props) {
     );
   };
 
-  const getStatusDetails = (status: string) => {
-    switch (status) {
-      case "agendada": return { color: colors.warning, icon: "time-outline", label: "Agendada" };
-      case "confirmada": return { color: colors.success, icon: "checkmark-circle-outline", label: "Confirmada" };
-      case "cancelada": return { color: colors.error, icon: "close-circle-outline", label: "Cancelada" };
-      case "concluida": return { color: colors.textSecondary, icon: "checkmark-done-outline", label: "Concluída" };
-      default: return { color: colors.textSecondary, icon: "help-outline", label: status };
-    }
-  };
+  const getStatusDetails = (status: string) =>
+    STATUS_CONSULTA[status as keyof typeof STATUS_CONSULTA] ?? { color: colors.textSecondary, icon: "help-outline", label: status };
 
   const formatDateTime = (dateTime: string) => {
-    const date = new Date(dateTime);
+    const date = parseDataHoraLocal(dateTime);
     return {
       date: date.toLocaleDateString("pt-BR"),
       time: date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     };
   };
 
-  const upcomingAppointments = appointments.filter(
-    (apt) =>
-      apt.status !== "cancelada" &&
-      apt.status !== "concluida" &&
-      new Date(apt.data_hora) >= new Date()
-  );
+  // Em atendimento continua em "Próximas" mesmo depois do horário de início:
+  // é onde fica o botão de voltar para a teleconsulta.
+  const isUpcoming = (apt: AppointmentWithDetails) =>
+    apt.status === "em_atendimento" ||
+    (!ENCERRADAS.includes(apt.status) && parseDataHoraLocal(apt.data_hora) >= new Date());
 
-  const pastAppointments = appointments.filter(
-    (apt) =>
-      apt.status === "concluida" ||
-      apt.status === "cancelada" ||
-      new Date(apt.data_hora) < new Date()
-  );
+  const upcomingAppointments = appointments.filter(isUpcoming);
+
+  const pastAppointments = appointments.filter((apt) => !isUpcoming(apt));
 
   const renderAppointment = ({ item }: { item: AppointmentWithDetails }) => {
     const { date, time } = formatDateTime(item.data_hora);
     const status = getStatusDetails(item.status);
+    const online = item.modalidade === "telemedicina";
+    const titulo = item.profissional_nome ?? item.clinica_nome;
+    const detalhe = item.tipo_atendimento ? ROTULO_ATENDIMENTO[item.tipo_atendimento] : item.especializacao_nome;
 
     return (
       <ModernCard variant="elevated" style={styles.appointmentCard}>
@@ -121,21 +119,35 @@ export default function AppointmentsScreen({ route, navigation }: Props) {
         </View>
 
         <View style={styles.appointmentBody}>
-          <Text style={styles.clinicName}>{item.clinica_nome}</Text>
-          <Text style={styles.specializationText}>
-            {item.especializacao_nome}
-          </Text>
-          {item.clinica_endereco && (
-            <Text style={styles.addressText}>📍 {item.clinica_endereco}</Text>
-          )}
+          <Text style={styles.clinicName}>{titulo}</Text>
+          {detalhe ? <Text style={styles.specializationText}>{detalhe}</Text> : null}
+          {item.profissional_nome && item.clinica_nome ? (
+            <IconText icon="business-outline" style={styles.addressText}>{item.clinica_nome}</IconText>
+          ) : null}
+          {item.animal_nome ? (
+            <IconText icon="paw-outline" style={styles.addressText}>{item.animal_nome}{item.animal_especie ? ` (${item.animal_especie})` : ""}</IconText>
+          ) : null}
+          {online ? (
+            <IconText icon="videocam-outline" style={styles.addressText}>Teleconsulta — a sala abre alguns minutos antes do horário</IconText>
+          ) : item.clinica_endereco ? (
+            <IconText icon="location-outline" style={styles.addressText}>{item.clinica_endereco}</IconText>
+          ) : null}
         </View>
 
-        {item.status === "agendada" && (
+        {(item.status === "agendada" || item.status === "confirmada" || (online && item.status === "em_atendimento")) && (
           <View style={styles.appointmentActions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelAppointment(item.codigo!)}>
-              <Ionicons name="close-circle-outline" size={20} color={colors.error} />
-              <Text style={styles.cancelButtonText}>Cancelar Agendamento</Text>
-            </TouchableOpacity>
+            {online && (
+              <TouchableOpacity style={styles.cancelButton} onPress={() => entrarNaTeleconsulta(item.codigo!)}>
+                <Ionicons name="videocam-outline" size={20} color={colors.primary} />
+                <Text style={[styles.cancelButtonText, { color: colors.primary }]}>Entrar na sala</Text>
+              </TouchableOpacity>
+            )}
+            {item.status !== "em_atendimento" && (
+              <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelAppointment(item.codigo!)}>
+                <Ionicons name="close-circle-outline" size={20} color={colors.error} />
+                <Text style={styles.cancelButtonText}>Cancelar Agendamento</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ModernCard>
@@ -144,7 +156,7 @@ export default function AppointmentsScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="light-content" />
       <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.header}>
         <Text style={styles.headerTitle}>Minhas Consultas</Text>
         <Text style={styles.headerSubtitle}>Gerencie seus agendamentos</Text>
@@ -329,7 +341,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    alignItems: "flex-end",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: spacing.lg,
   },
   cancelButton: {
     flexDirection: "row",

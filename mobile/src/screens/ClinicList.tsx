@@ -214,7 +214,7 @@ export default function ClinicList({ navigation, route }: Props) {
         closeFiltersModal();
       }}
     >
-      <View style={styles.modalOverlay}>
+      <View style={[styles.modalOverlay, Platform.OS === "web" && styles.webModalOverlay]}>
         <TouchableOpacity
           activeOpacity={1}
           style={styles.modalOverlayButton}
@@ -224,7 +224,8 @@ export default function ClinicList({ navigation, route }: Props) {
         <Animated.View
           style={[
             styles.modalContainer,
-            {
+            Platform.OS === "web" && styles.webModalContainer,
+            Platform.OS !== "web" && {
               transform: [{ translateY: sheetTranslateY }],
             },
           ]}
@@ -471,11 +472,11 @@ export default function ClinicList({ navigation, route }: Props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="light-content" />
       
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
-        style={styles.header}
+        style={[styles.header, Platform.OS === 'web' && styles.webHeader]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
@@ -515,9 +516,14 @@ export default function ClinicList({ navigation, route }: Props) {
         <FlatList
           data={filteredClinics}
           renderItem={renderClinicItem}
+          numColumns={Platform.OS === 'web' ? 3 : 1}
+          columnWrapperStyle={Platform.OS === 'web' ? styles.webColumn : undefined}
           keyExtractor={(item) => item.codigo.toString()}
           ListEmptyComponent={renderEmptyState}
-          contentContainerStyle={styles.listContentContainer}
+          contentContainerStyle={[
+            styles.listContentContainer,
+            Platform.OS === 'web' && styles.webListContentContainer,
+          ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -545,8 +551,20 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.xl,
     borderBottomRightRadius: borderRadius.xl,
   },
+  webHeader: {
+    paddingTop: 48,
+    paddingBottom: 40,
+    borderRadius: 0,
+  },
   headerContent: {
     marginBottom: spacing.lg,
+    ...(Platform.OS === 'web'
+      ? {
+          width: '100%',
+          maxWidth: 760,
+          alignSelf: 'center',
+        }
+      : {}),
   },
   titleContainer: {
     flexDirection: 'row',
@@ -568,6 +586,13 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     marginTop: spacing.md,
+    ...(Platform.OS === 'web'
+      ? {
+          width: '100%',
+          maxWidth: 960,
+          alignSelf: 'center',
+        }
+      : {}),
   },
   searchInput: {
     backgroundColor: colors.surface,
@@ -579,12 +604,27 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
+    ...(Platform.OS === 'web'
+      ? {
+          paddingHorizontal: 32,
+          paddingVertical: 20,
+          maxWidth: 1280,
+          width: '100%',
+          alignSelf: 'center',
+          borderRadius: 0,
+        }
+      : {}),
   },
   filterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
+    ...(Platform.OS === 'web'
+      ? {
+          paddingHorizontal: 0,
+        }
+      : {}),
   },
   filterHeaderText: {
     fontSize: fontSize.md,
@@ -607,6 +647,12 @@ const styles = StyleSheet.create({
   filterButtonContainer: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
+    ...(Platform.OS === 'web'
+      ? {
+          paddingHorizontal: 0,
+          maxWidth: 360,
+        }
+      : {}),
   },
   filterButton: {
     flexDirection: 'row',
@@ -698,6 +744,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'flex-end',
   },
+  webModalOverlay: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   modalOverlayButton: {
     flex: 1,
   },
@@ -708,6 +759,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: height * 0.9,
     ...shadows.large,
+  },
+  webModalContainer: {
+    width: '100%',
+    maxWidth: 720,
+    height: '85%',
+    maxHeight: 720,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    alignSelf: 'center',
   },
   modalHeader: {
     alignItems: 'center',
@@ -897,6 +957,19 @@ const styles = StyleSheet.create({
   listContentContainer: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  webListContentContainer: {
+    width: '100%',
+    maxWidth: 1280,
+    alignSelf: 'center',
+    paddingHorizontal: 32,
+    paddingTop: 32,
+    paddingBottom: 64,
+  },
+  webColumn: {
+    gap: 24,
+    alignItems: 'stretch',
+    marginBottom: 24,
   },
   emptyState: {
     flex: 1,

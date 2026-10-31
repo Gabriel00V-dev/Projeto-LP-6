@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { getClinicById } from '../api/client';
 import { Clinic } from '../types';
 import { colors, spacing, fontSize, borderRadius } from '../styles/theme';
@@ -82,11 +83,13 @@ export default function ClinicDetailsScreen({ route, navigation }: Props) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Informações de Contato</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>📞 Telefone:</Text>
+              <Ionicons name="call-outline" size={18} color={colors.textSecondary} style={styles.infoIcon} />
+              <Text style={styles.infoLabel}>Telefone:</Text>
               <Text style={styles.infoValue}>{clinic.fone}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>✉️ Email:</Text>
+              <Ionicons name="mail-outline" size={18} color={colors.textSecondary} style={styles.infoIcon} />
+              <Text style={styles.infoLabel}>Email:</Text>
               <Text style={styles.infoValue}>{clinic.email}</Text>
             </View>
           </View>
@@ -210,6 +213,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.sm,
+  },
+  infoIcon: {
+    marginRight: spacing.xs,
   },
   infoLabel: {
     fontSize: fontSize.md,

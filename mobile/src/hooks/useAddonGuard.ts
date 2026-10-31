@@ -82,7 +82,7 @@ export function useAddonGuard(addon: keyof ClinicAddons): AddonGuardResult {
     }] : [];
 
     Alert.alert(
-      `🔒 ${config.label}`,
+      `${config.label} (recurso bloqueado)`,
       `${config.descricao}\n\nDisponível a partir do plano ${config.plano_minimo}.`,
       [
         { text: 'Agora não', style: 'cancel' },

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import ModernButton from '../components/ModernButton';
 import ModernCard from '../components/ModernCard';
+import IconText from '../components/IconText';
 import { PremiumActionCard, SubscriptionBanner } from '../components/PremiumGate';
 import { useClinic } from '../contexts/ClinicContexts';
 import { authLogout, getClinicById } from '../api/client';
@@ -61,7 +62,7 @@ export default function ClinicMenu({ route, navigation }: Props) {
   const handleLogout = async () => {
     await authLogout();   // limpa o JWT do AsyncStorage
     clearSession();       // limpa subscription e clinic do contexto
-    navigation.replace('Login');
+    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
 
   return (
@@ -88,15 +89,15 @@ export default function ClinicMenu({ route, navigation }: Props) {
                   <Image source={{ uri: clinic.imagem }} style={styles.clinicImage} />
                 ) : (
                   <View style={styles.clinicPlaceholder}>
-                    <Text style={styles.clinicPlaceholderText}>🏥</Text>
+                    <Ionicons name="business-outline" size={36} color={colors.textSecondary} />
                   </View>
                 )}
               </View>
               <View style={styles.clinicDetails}>
                 <Text style={styles.cardTitle}>{clinic?.nome}</Text>
-                {clinic?.endereco && <Text style={styles.infoText}>📍 {clinic.endereco}</Text>}
-                {clinic?.fone && <Text style={styles.infoText}>📞 {clinic.fone}</Text>}
-                {clinic?.email && <Text style={styles.infoText}>📧 {clinic.email}</Text>}
+                {clinic?.endereco && <IconText icon="location-outline" style={styles.infoText}>{clinic.endereco}</IconText>}
+                {clinic?.fone && <IconText icon="call-outline" style={styles.infoText}>{clinic.fone}</IconText>}
+                {clinic?.email && <IconText icon="mail-outline" style={styles.infoText}>{clinic.email}</IconText>}
               </View>
             </View>
           </ModernCard>
@@ -111,7 +112,7 @@ export default function ClinicMenu({ route, navigation }: Props) {
             <ModernCard variant="outlined" style={styles.actionCard}>
               <View style={styles.actionContent}>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>✏️ Editar Dados</Text>
+                  <IconText icon="create-outline" color={colors.primary} size={18} style={styles.actionTitle}>Editar Dados</IconText>
                   <Text style={styles.actionDescription}>Atualize informações da clínica</Text>
                 </View>
                 <ModernButton
@@ -125,7 +126,7 @@ export default function ClinicMenu({ route, navigation }: Props) {
             <ModernCard variant="outlined" style={styles.actionCard}>
               <View style={styles.actionContent}>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>⚕️ Especialidades</Text>
+                  <IconText icon="medical-outline" color={colors.primary} size={18} style={styles.actionTitle}>Especialidades</IconText>
                   <Text style={styles.actionDescription}>Gerencie as especialidades médicas</Text>
                 </View>
                 <ModernButton
@@ -139,7 +140,7 @@ export default function ClinicMenu({ route, navigation }: Props) {
             <ModernCard variant="outlined" style={styles.actionCard}>
               <View style={styles.actionContent}>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>👥 Pacientes</Text>
+                  <IconText icon="people-outline" color={colors.primary} size={18} style={styles.actionTitle}>Pacientes</IconText>
                   <Text style={styles.actionDescription}>Consultas e histórico dos pacientes</Text>
                 </View>
                 <ModernButton
@@ -153,7 +154,7 @@ export default function ClinicMenu({ route, navigation }: Props) {
             <ModernCard variant="outlined" style={styles.actionCard}>
               <View style={styles.actionContent}>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>📅 Agenda</Text>
+                  <IconText icon="calendar-outline" color={colors.primary} size={18} style={styles.actionTitle}>Agenda</IconText>
                   <Text style={styles.actionDescription}>Horários e atendimentos</Text>
                 </View>
                 <ModernButton
@@ -167,7 +168,65 @@ export default function ClinicMenu({ route, navigation }: Props) {
             <ModernCard variant="outlined" style={styles.actionCard}>
               <View style={styles.actionContent}>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>📊 Relatórios Básicos</Text>
+                  <IconText icon="id-card-outline" color={colors.primary} size={18} style={styles.actionTitle}>Equipe</IconText>
+                  <Text style={styles.actionDescription}>Psicólogos, veterinários e demais profissionais</Text>
+                </View>
+                <ModernButton
+                  title="Gerenciar"
+                  onPress={() => navigation.navigate('ClinicProfessionals', { clinic })}
+                  size="small"
+                />
+              </View>
+            </ModernCard>
+
+            <ModernCard variant="outlined" style={styles.actionCard}>
+              <View style={styles.actionContent}>
+                <View style={styles.actionInfo}>
+                  <IconText icon="pulse-outline" color={colors.primary} size={18} style={styles.actionTitle}>Atendimentos do dia</IconText>
+                  <Text style={styles.actionDescription}>Confirmar, iniciar, evolução e teleconsulta</Text>
+                </View>
+                <ModernButton
+                  title="Abrir"
+                  onPress={() => navigation.navigate('ProviderAgenda', { clinic })}
+                  size="small"
+                />
+              </View>
+            </ModernCard>
+
+            <ModernCard variant="outlined" style={styles.actionCard}>
+              <View style={styles.actionContent}>
+                <View style={styles.actionInfo}>
+                  <IconText icon="time-outline" color={colors.primary} size={18} style={styles.actionTitle}>Horários</IconText>
+                  <Text style={styles.actionDescription}>Agenda semanal da clínica e da equipe</Text>
+                </View>
+                <ModernButton
+                  title="Configurar"
+                  onPress={() => navigation.navigate('Availability', { clinic })}
+                  size="small"
+                />
+              </View>
+            </ModernCard>
+
+            {clinic?.tipo === 'upa' && (
+              <ModernCard variant="outlined" style={styles.actionCard}>
+                <View style={styles.actionContent}>
+                  <View style={styles.actionInfo}>
+                    <IconText icon="medkit-outline" color={colors.primary} size={18} style={styles.actionTitle}>Fila da UPA</IconText>
+                    <Text style={styles.actionDescription}>Triagem, risco, chamada e produção do plantão</Text>
+                  </View>
+                  <ModernButton
+                    title="Abrir"
+                    onPress={() => navigation.navigate('UpaStaff', { unitId: clinic.codigo, unitName: clinic.nome, clinic })}
+                    size="small"
+                  />
+                </View>
+              </ModernCard>
+            )}
+
+            <ModernCard variant="outlined" style={styles.actionCard}>
+              <View style={styles.actionContent}>
+                <View style={styles.actionInfo}>
+                  <IconText icon="bar-chart-outline" color={colors.primary} size={18} style={styles.actionTitle}>Relatórios Básicos</IconText>
                   <Text style={styles.actionDescription}>Estatísticas gerais da clínica</Text>
                 </View>
                 <ModernButton
@@ -181,7 +240,7 @@ export default function ClinicMenu({ route, navigation }: Props) {
             <ModernCard variant="outlined" style={styles.actionCard}>
               <View style={styles.actionContent}>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>📄 Documentos</Text>
+                  <IconText icon="document-text-outline" color={colors.primary} size={18} style={styles.actionTitle}>Documentos</IconText>
                   <Text style={styles.actionDescription}>Documentos médicos dos pacientes</Text>
                 </View>
                 <ModernButton
@@ -202,10 +261,11 @@ export default function ClinicMenu({ route, navigation }: Props) {
                 : `Plano ${subscription?.plano} ativo`}
             </Text>
 
-            {/* Telemedicina — protegida por addon_telemedicina */}
+            {/* Telemedicina — protegida por addon_telemedicina. Com o add-on,
+                a clínica cria horários online e as salas saem das consultas. */}
             <PremiumActionCard
               addon="addon_telemedicina"
-              onPress={() => navigation.navigate('Telemedicina', { clinic })}
+              onPress={() => navigation.navigate('Availability', { clinic })}
             />
 
             {/* PDF — protegida por addon_pdf */}
