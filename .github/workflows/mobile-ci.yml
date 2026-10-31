@@ -23,7 +23,8 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        # React Native 0.88 (Expo SDK 58) exige Node 22.13+; mesmo do eas.json.
+        node-version: '24.22.2'
 
     - name: Install dependencies
       run: npm install

@@ -1,0 +1,62 @@
+name: EAS Update (OTA)
+
+# Publica uma atualização pelo ar (eas update) a cada push na main que mexa
+# no app. Os aparelhos com o APK do canal "production" baixam a versão nova
+# ao abrir o app. Mudanças nativas (SDK, bibliotecas nativas, app.json) não
+# chegam a APKs antigos: o runtimeVersion por fingerprint barra; essas pedem
+# um build novo (eas build).
+#
+# Requer o secret EXPO_TOKEN no repositório (expo.dev > Account settings >
+# Access tokens).
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/eas-update.yml'
+  workflow_dispatch:
+
+# Pushes seguidos entram em fila: nunca duas publicações ao mesmo tempo.
+concurrency:
+  group: eas-update-production
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Publicar atualização OTA
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    env:
+      # A URL entra no bundle na hora da publicação; fixada aqui para o app
+      # publicado nunca apontar para um backend local.
+      EXPO_PUBLIC_API_URL: https://backend-gabriel00souzavasconcelos-1989s-projects.vercel.app
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.22.2'
+
+    - name: Setup EAS
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        token: ${{ secrets.EXPO_TOKEN }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Publish update
+      env:
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+      run: |
+        MENSAGEM="$(printf '%s' "${COMMIT_MESSAGE:-Atualização manual}" | head -n 1)"
+        eas update --channel production --environment production --message "$MENSAGEM" --non-interactive
