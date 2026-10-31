@@ -23,17 +23,24 @@ import {
   fontWeight,
   borderRadius,
 } from "../styles/theme";
-import { authLogin } from "../api/client";
-import { useClinic } from "../contexts/ClinicContexts"; 
+import { authLogin, SessionRole } from "../api/client";
+import { useClinic } from "../contexts/ClinicContexts";
+import { entrarNaSessao } from "../navigation/session";
 
 type Props = {
   navigation: any;
 };
 
+const PERFIS: { role: SessionRole; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { role: "paciente", label: "Sou Paciente", icon: "person-outline" },
+  { role: "clinica", label: "Sou Clínica", icon: "business-outline" },
+  { role: "profissional", label: "Sou Profissional", icon: "medkit-outline" },
+];
+
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [role, setRole] = useState<"paciente" | "clinica">("paciente");
+  const [role, setRole] = useState<SessionRole>("paciente");
   const [loading, setLoading] = useState(false);
 
   const { loadClinicSession } = useClinic();
@@ -54,15 +61,10 @@ export default function LoginScreen({ navigation }: Props) {
         return;
       }
 
-      if (role === "paciente") {
-        navigation.replace("PatientMenu", { patient: resp.user });
-      } else {
-        // Carrega add-ons no contexto global — uma única chamada à API,
-        // depois hasAddon() funciona em qualquer tela sem novo request.
-        const token = resp.session?.access_token ?? resp.token ?? "";
-        await loadClinicSession(resp.user, token);
-        navigation.replace("ClinicMenu", { clinic: resp.user });
-      }
+      // Leva cada perfil à sua tela inicial. Clínica e profissional aprovados
+      // carregam os add-ons no contexto global (uma única chamada à API);
+      // cadastro ainda em análise vai para a tela de acompanhamento.
+      await entrarNaSessao(navigation, role, resp.user, loadClinicSession);
     } catch (err: any) {
       console.error("Login Error:", err);
       const errorMessage = getErrorMessage(
@@ -76,11 +78,16 @@ export default function LoginScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        Platform.OS === "web" && styles.webContainer,
+      ]}
+    >
       <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
-        style={styles.header}
+        style={[styles.header, Platform.OS === "web" && styles.webHeader]}
       >
         <Ionicons name="log-in-outline" size={48} color={colors.onPrimary} />
         <Text style={styles.title}>Bem-vindo!</Text>
@@ -88,49 +95,44 @@ export default function LoginScreen({ navigation }: Props) {
       </LinearGradient>
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={[styles.keyboardContainer, Platform.OS === "web" && styles.webKeyboardContainer]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          contentContainerStyle={styles.contentContainer}
+          contentContainerStyle={[
+            styles.contentContainer,
+            Platform.OS === "web" && styles.webContentContainer,
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.formContainer}>
-            <View style={styles.roleSelector}>
-              <TouchableOpacity
-                style={[
-                  styles.roleButton,
-                  role === "paciente" && styles.roleButtonActive,
-                ]}
-                onPress={() => setRole("paciente")}
-              >
-                <Text
-                  style={[
-                    styles.roleButtonText,
-                    role === "paciente" && styles.roleButtonTextActive,
-                  ]}
-                >
-                  👤 Sou Paciente
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.roleButton,
-                  role === "clinica" && styles.roleButtonActive,
-                ]}
-                onPress={() => setRole("clinica")}
-              >
-                <Text
-                  style={[
-                    styles.roleButtonText,
-                    role === "clinica" && styles.roleButtonTextActive,
-                  ]}
-                >
-                  🏥 Sou Clínica
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {role === "prefeitura" ? (
+              <View style={styles.prefeituraBanner}>
+                <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
+                <Text style={styles.prefeituraText}>Acesso restrito da prefeitura</Text>
+                <TouchableOpacity onPress={() => setRole("paciente")} disabled={loading}>
+                  <Text style={styles.linkText}>Voltar</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.roleSelector}>
+                {PERFIS.map((perfil) => {
+                  const ativo = role === perfil.role;
+                  return (
+                    <TouchableOpacity
+                      key={perfil.role}
+                      style={[styles.roleButton, ativo && styles.roleButtonActive]}
+                      onPress={() => setRole(perfil.role)}
+                    >
+                      <Ionicons name={perfil.icon} size={20} color={ativo ? colors.primary : colors.textSecondary} />
+                      <Text style={[styles.roleButtonText, ativo && styles.roleButtonTextActive]}>
+                        {perfil.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
 
             <ModernInput
               label="Email"
@@ -158,7 +160,7 @@ export default function LoginScreen({ navigation }: Props) {
               <View style={styles.loadingButton}>
                 <ActivityIndicator color={colors.onPrimary} />
                 <Text style={styles.loadingText}>
-                  {role === "clinica" ? "Carregando seu perfil..." : "Entrando..."}
+                  {role === "paciente" ? "Entrando..." : "Carregando seu perfil..."}
                 </Text>
               </View>
             ) : (
@@ -187,9 +189,23 @@ export default function LoginScreen({ navigation }: Props) {
             >
               <Text style={styles.linkText}>Cadastre-se como Clínica</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("RegisterProfessional")}
+              disabled={loading}
+            >
+              <Text style={styles.linkText}>Cadastre-se como Profissional</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.guestActions}>
+            <ModernButton
+              title="Ver serviços de atendimento"
+              onPress={() => navigation.navigate("ServicesHome")}
+              variant="primary"
+              size="medium"
+              fullWidth
+              disabled={loading}
+            />
             <ModernButton
               title="Ver Clínicas Disponíveis"
               onPress={() => navigation.navigate("ClinicList")}
@@ -198,6 +214,16 @@ export default function LoginScreen({ navigation }: Props) {
               fullWidth
               disabled={loading}
             />
+            {role !== "prefeitura" && (
+              <TouchableOpacity
+                style={styles.prefeituraLink}
+                onPress={() => setRole("prefeitura")}
+                disabled={loading}
+              >
+                <Ionicons name="shield-checkmark-outline" size={16} color={colors.textSecondary} />
+                <Text style={styles.prefeituraLinkText}>Acesso da prefeitura</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -210,6 +236,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  webContainer: {
+    flexDirection: "row",
+    backgroundColor: colors.background,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  webKeyboardContainer: {
+    flex: 1.1,
+    justifyContent: "center",
+  },
   header: {
     alignItems: "center",
     justifyContent: "center",
@@ -218,6 +255,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     borderBottomLeftRadius: borderRadius.xl,
     borderBottomRightRadius: borderRadius.xl,
+  },
+  webHeader: {
+    flex: 0.9,
+    minHeight: "100%",
+    borderRadius: 0,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.xxl,
   },
   title: {
     fontSize: fontSize.xxxl,
@@ -236,11 +280,27 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: spacing.lg,
   },
+  webContentContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    width: "100%",
+    maxWidth: 640,
+    alignSelf: "center",
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.xxl,
+  },
   formContainer: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.xl,
+    ...(Platform.OS === "web"
+      ? {
+          width: "100%",
+          maxWidth: 560,
+          alignSelf: "center",
+        }
+      : {}),
     ...Platform.select({
       ios: {
         shadowColor: colors.shadow,
@@ -266,6 +326,33 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     alignItems: "center",
     justifyContent: "center",
+    gap: 2,
+  },
+  prefeituraBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.primary + "10",
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  prefeituraText: {
+    flex: 1,
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.primary,
+  },
+  prefeituraLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+  },
+  prefeituraLinkText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
   },
   roleButtonActive: {
     backgroundColor: colors.surface,
@@ -282,9 +369,10 @@ const styles = StyleSheet.create({
     }),
   },
   roleButtonText: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     fontWeight: fontWeight.medium,
     color: colors.textSecondary,
+    textAlign: "center",
   },
   roleButtonTextActive: {
     color: colors.primary,

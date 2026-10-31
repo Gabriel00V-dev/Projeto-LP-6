@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Clinic } from '../types';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../styles/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,11 +66,27 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
+    ...(Platform.OS === 'web'
+      ? {
+          flex: 1,
+          marginBottom: 0,
+          minWidth: 0,
+          shadowColor: '#16324F',
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+        }
+      : {}),
   },
   image: {
     width: '100%',
     height: 160,
     backgroundColor: colors.surfaceVariant,
+    ...(Platform.OS === 'web'
+      ? {
+          height: 136,
+        }
+      : {}),
   },
   infoContainer: {
     padding: spacing.lg,

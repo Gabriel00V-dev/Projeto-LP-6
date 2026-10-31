@@ -6,12 +6,15 @@ import {
   ScrollView,
   StatusBar,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation";
 import ModernButton from "../components/ModernButton";
 import ModernCard from "../components/ModernCard";
+import IconText from "../components/IconText";
+import { authLogout } from "../api/client";
 import {
   colors,
   spacing,
@@ -27,6 +30,20 @@ type Props = {
 };
 
 const menuActions = [
+  {
+    id: "services",
+    label: "Serviços",
+    icon: "grid-outline" as const,
+    screen: "ServicesHome",
+    color: "#2563EB",
+  },
+  {
+    id: "pets",
+    label: "Meus Animais",
+    icon: "paw-outline" as const,
+    screen: "Pets",
+    color: "#D97706",
+  },
   {
     id: "clinics",
     label: "Buscar Clínicas",
@@ -65,7 +82,7 @@ export default function PatientMenu({ route, navigation }: Props) {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="light-content" />
 
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
@@ -92,13 +109,13 @@ export default function PatientMenu({ route, navigation }: Props) {
           <View style={styles.patientInfoLeft}>
             <Text style={styles.cardTitle}>Suas Informações</Text>
             {patient?.email && (
-              <Text style={styles.infoText}>📧 {patient.email}</Text>
+              <IconText icon="mail-outline" style={styles.infoText}>{patient.email}</IconText>
             )}
             {patient?.fone && (
-              <Text style={styles.infoText}>📱 {patient.fone}</Text>
+              <IconText icon="phone-portrait-outline" style={styles.infoText}>{patient.fone}</IconText>
             )}
             {patient?.ende && (
-              <Text style={styles.infoText}>📍 {patient.ende}</Text>
+              <IconText icon="location-outline" style={styles.infoText}>{patient.ende}</IconText>
             )}
           </View>
           <ModernButton
@@ -136,7 +153,11 @@ export default function PatientMenu({ route, navigation }: Props) {
       <View style={styles.logoutContainer}>
         <ModernButton
           title="Sair da Conta"
-          onPress={() => navigation.replace("Login")}
+          onPress={async () => {
+            // Limpa a sessão salva; sem isso o app reabriria logado.
+            await authLogout();
+            navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+          }}
           variant="outline"
           size="medium"
           fullWidth
@@ -201,6 +222,19 @@ const styles = StyleSheet.create({
   patientCard: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
+    ...(Platform.OS === "web"
+      ? {
+          width: "100%",
+          maxWidth: 1040,
+          alignSelf: "center",
+          borderWidth: 1,
+          borderColor: "#DCE7F3",
+          shadowColor: "#17324D",
+          shadowOpacity: 0.1,
+          shadowRadius: 14,
+          shadowOffset: { width: 0, height: 5 },
+        }
+      : {}),
   },
   patientInfoRow: {
     flexDirection: "row",
@@ -225,6 +259,13 @@ const styles = StyleSheet.create({
   actionsContainer: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.xl,
+    ...(Platform.OS === "web"
+      ? {
+          width: "100%",
+          maxWidth: 1040,
+          alignSelf: "center",
+        }
+      : {}),
   },
   sectionTitle: {
     fontSize: fontSize.xl,
@@ -247,6 +288,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     ...shadows.small,
+    ...(Platform.OS === "web"
+      ? {
+          aspectRatio: undefined,
+          minHeight: 180,
+          borderWidth: 1,
+          borderColor: "#DCE7F3",
+          shadowColor: "#17324D",
+          shadowOpacity: 0.12,
+          shadowRadius: 14,
+          shadowOffset: { width: 0, height: 5 },
+          transform: [{ translateY: 0 }],
+        }
+      : {}),
   },
   actionIconContainer: {
     width: 60,

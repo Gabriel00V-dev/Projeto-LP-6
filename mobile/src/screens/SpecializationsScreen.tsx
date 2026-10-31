@@ -8,6 +8,7 @@ import {
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import ModernInput from '../components/ModernInput';
@@ -115,12 +116,11 @@ export default function SpecializationsScreen({ navigation, route }: Props) {
               ]}
               onPress={() => handleToggleSpecialization(item)}
             >
-              <Text style={[
-                styles.selectButtonText,
-                isSelected && styles.selectedButtonText
-              ]}>
-                {isSelected ? '✓' : '+'}
-              </Text>
+              <Ionicons
+                name={isSelected ? 'checkmark' : 'add'}
+                size={18}
+                color={isSelected ? colors.surface : colors.text}
+              />
             </TouchableOpacity>
           )}
         </View>

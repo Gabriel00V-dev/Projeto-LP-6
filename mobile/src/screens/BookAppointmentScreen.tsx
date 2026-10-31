@@ -6,6 +6,7 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from "../styles/t
 import ModernCard from "../components/ModernCard";
 import ModernButton from "../components/ModernButton";
 import ModernInput from "../components/ModernInput";
+import IconText from "../components/IconText";
 import { createAppointment, getAvailableSlots, getClinicSpecializations } from "../api/client";
 import { Specialization } from "../types";
 
@@ -36,21 +37,21 @@ export default function BookAppointmentScreen({ route, navigation }: Props) {
   }, [selectedDate]);
 
   useEffect(() => {
-    console.log("📌 Especialização mudou para:", selectedSpecialization);
+    console.log("Especialização mudou para:", selectedSpecialization);
   }, [selectedSpecialization]);
 
   const loadSpecializations = async () => {
     try {
-      console.log("🔍 Carregando especializações para clínica:", clinic.codigo);
+      console.log("Carregando especializações para clínica:", clinic.codigo);
       const data = await getClinicSpecializations(clinic.codigo);
-      console.log("📦 Especializações recebidas:", JSON.stringify(data, null, 2));
+      console.log("Especializações recebidas:", JSON.stringify(data, null, 2));
       setSpecializations(data || []);
       
       if (!data || data.length === 0) {
         Alert.alert("Atenção", "Esta clínica não possui especializações cadastradas");
       }
     } catch (error: any) {
-      console.error("❌ Erro ao carregar especializações:", error);
+      console.error("Erro ao carregar especializações:", error);
       Alert.alert("Erro", `Não foi possível carregar as especializações: ${error.message}`);
     }
   };
@@ -162,8 +163,8 @@ export default function BookAppointmentScreen({ route, navigation }: Props) {
     <ScrollView style={styles.container}>
       <ModernCard variant="elevated" style={styles.clinicCard}>
         <Text style={styles.clinicName}>{clinic.nome}</Text>
-        <Text style={styles.clinicInfo}>📍 {clinic.endereco}</Text>
-        {clinic.fone && <Text style={styles.clinicInfo}>📞 {clinic.fone}</Text>}
+        <IconText icon="location-outline" style={styles.clinicInfo}>{clinic.endereco}</IconText>
+        {clinic.fone && <IconText icon="call-outline" style={styles.clinicInfo}>{clinic.fone}</IconText>}
       </ModernCard>
 
       <View style={styles.formSection}>
@@ -185,7 +186,7 @@ export default function BookAppointmentScreen({ route, navigation }: Props) {
                     isSelected && styles.specializationChipSelected,
                   ]}
                   onPress={() => {
-                    console.log("🎯 Selecionou especialização:", spec.codigo, spec.nome);
+                    console.log("Selecionou especialização:", spec.codigo, spec.nome);
                     setSelectedSpecialization(spec.codigo);
                   }}
                   activeOpacity={0.7}

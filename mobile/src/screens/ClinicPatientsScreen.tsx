@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from "../styles/theme";
 import ModernCard from "../components/ModernCard";
 import ModernButton from "../components/ModernButton";
+import IconText from "../components/IconText";
 import { getAppointmentsByClinic, updateAppointmentStatus } from "../api/client";
 import { AppointmentWithDetails } from "../types";
 
@@ -199,10 +200,10 @@ export default function ClinicPatientsScreen({ route, navigation }: Props) {
                     </Text>
 
                     {apt.paciente_email && (
-                      <Text style={styles.contactText}>📧 {apt.paciente_email}</Text>
+                      <IconText icon="mail-outline" style={styles.contactText}>{apt.paciente_email}</IconText>
                     )}
                     {apt.observacoes && (
-                      <Text style={styles.observationsText}>💬 {apt.observacoes}</Text>
+                      <IconText icon="chatbubble-outline" style={styles.observationsText}>{apt.observacoes}</IconText>
                     )}
 
                     {apt.status === 'agendada' && (

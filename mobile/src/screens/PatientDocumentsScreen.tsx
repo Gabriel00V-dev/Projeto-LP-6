@@ -204,7 +204,7 @@ export default function PatientDocumentsScreen({ route }: Props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="light-content" />
       <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.header}>
         <Text style={styles.headerTitle}>Meus Documentos</Text>
         <Text style={styles.headerSubtitle}>Gerencie seus exames, receitas e laudos</Text>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize } from '../styles/theme';
 
 interface CircularImageProps {
@@ -43,7 +44,7 @@ export default function CircularImage({
       
       {showEditButton && (
         <View style={[styles.editButton, { bottom: size * 0.1, right: size * 0.1 }]}>
-          <Text style={styles.editButtonText}>📷</Text>
+          <Ionicons name="camera" size={13} color={colors.onPrimary} />
         </View>
       )}
     </View>
@@ -86,9 +87,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  editButtonText: {
-    fontSize: 12,
-    textAlign: 'center',
   },
 });

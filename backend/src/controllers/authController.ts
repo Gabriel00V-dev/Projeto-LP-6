@@ -25,6 +25,22 @@ export class AuthController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  async me(req: Request, res: Response) {
+    try {
+      res.json(await authService.me(req.user!));
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+
+  async refresh(req: Request, res: Response) {
+    try {
+      res.json(await authService.refresh(req.body?.refresh_token));
+    } catch (error: any) {
+      res.status(401).json({ error: error.message, code: 'REFRESH_FAILED' });
+    }
+  }
 }
 
 export const authController = new AuthController();

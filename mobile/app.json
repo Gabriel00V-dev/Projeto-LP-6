@@ -27,13 +27,21 @@
     "scheme": "gerenciamento-clinicas",
     "plugins": [
       "expo-font",
-      "expo-status-bar"
+      "expo-status-bar",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "eas": {
         "projectId": "3d9095d6-a141-4a5c-a6f4-9043d3961bc7"
       }
     },
-    "owner": "mareles"
+    "owner": "mareles",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3d9095d6-a141-4a5c-a6f4-9043d3961bc7"
+    },
+    "ios": {}
   }
 }
