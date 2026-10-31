@@ -13,7 +13,14 @@ import specsRouter          from './routes/specializations';
 import authRouter           from './routes/auth';
 import appointmentsRouter   from './routes/appointments';
 import documentsRouter      from './routes/documents';
-import addonsRouter         from './routes/addons';       // novo
+import addonsRouter         from './routes/addons';
+import professionalsRouter  from './routes/professionals';
+import availabilityRouter   from './routes/availability';
+import animalsRouter        from './routes/animals';
+import upaRouter            from './routes/upa';
+import telemedicineRouter   from './routes/telemedicine';
+import approvalsRouter      from './routes/approvals';
+import dashboardRouter      from './routes/dashboard';
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -77,7 +84,14 @@ app.use('/specializations', specsRouter);
 app.use('/auth',          authRouter);
 app.use('/appointments',  appointmentsRouter);
 app.use('/documents',     documentsRouter);
-app.use('/addons',        addonsRouter);        // novo
+app.use('/addons',        addonsRouter);
+app.use('/professionals', professionalsRouter);
+app.use('/availability',  availabilityRouter);
+app.use('/animals',       animalsRouter);
+app.use('/upa',           upaRouter);
+app.use('/telemedicine',  telemedicineRouter);
+app.use('/approvals',     approvalsRouter);
+app.use('/dashboard',     dashboardRouter);
 
 // Em ambiente serverless (Vercel) o app é exportado e invocado por request,
 // sem precisar escutar uma porta.

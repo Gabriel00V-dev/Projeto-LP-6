@@ -17,6 +17,8 @@ export interface Clinic {
   senha?: string;
   imagem?: string | null;
   atende_unimed?: boolean;
+  tipo?: 'clinica' | 'veterinaria' | 'upa' | 'psicologia';
+  aceita_fila_online?: boolean;
 }
 
 export interface Specialization {
@@ -32,11 +34,20 @@ export interface ClinicSpecialization {
 export interface Appointment {
   codigo: number;
   codigo_paciente: number;
-  codigo_clinica: number;
-  codigo_especializacao: number;
+  codigo_clinica: number | null;
+  codigo_especializacao: number | null;
+  codigo_profissional?: number | null;
+  codigo_animal?: number | null;
   data_hora: string;
-  status: 'agendada' | 'confirmada' | 'cancelada' | 'concluida';
+  duracao_minutos?: number;
+  modalidade?: 'presencial' | 'telemedicina';
+  tipo_atendimento?: 'consulta' | 'vacinacao' | 'castracao' | 'retorno' | 'orientacao_online' | 'emergencia' | null;
+  status: 'agendada' | 'confirmada' | 'em_atendimento' | 'cancelada' | 'concluida' | 'faltou';
   observacoes?: string;
+  motivo_cancelamento?: string | null;
+  confirmado_em?: string | null;
+  iniciado_em?: string | null;
+  finalizado_em?: string | null;
   criado_em?: string;
   atualizado_em?: string;
 }
@@ -44,9 +55,15 @@ export interface Appointment {
 export interface AppointmentWithDetails extends Appointment {
   paciente_nome?: string;
   paciente_email?: string;
+  paciente_fone?: string;
   clinica_nome?: string;
   clinica_endereco?: string;
+  clinica_fone?: string;
   especializacao_nome?: string;
+  profissional_nome?: string;
+  profissional_tipo?: string;
+  animal_nome?: string;
+  animal_especie?: string;
 }
 
 export interface Document {

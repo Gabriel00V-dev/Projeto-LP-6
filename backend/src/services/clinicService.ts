@@ -28,8 +28,13 @@ function normalizeClinic(row: any) {
   return semSenha({
     ...row,
     atende_unimed: atendeUnimed,
+    tipo: row.tipo ?? 'clinica',
+    // Sem a coluna (banco antes da migration de aprovação), conta como aprovada.
+    status_cadastro: row.status_cadastro ?? 'aprovado',
   });
 }
+
+export const TIPOS_CLINICA = ['clinica', 'veterinaria', 'upa', 'psicologia'];
 
 export interface ClinicData {
   nome: string;
@@ -39,6 +44,7 @@ export interface ClinicData {
   senha?: string;
   imagem?: string;
   atende_unimed?: boolean;
+  tipo?: string;
 }
 
 export interface UpdateClinicData {
@@ -49,10 +55,20 @@ export interface UpdateClinicData {
   senha?: string;
   imagem?: string;
   atende_unimed?: boolean;
+  tipo?: string;
+  aceita_fila_online?: boolean;
 }
 
 export class ClinicService {
-  async getAllClinics(filters?: { specialization?: string; atende_unimed?: boolean }) {
+  async getAllClinics(filters?: { specialization?: string; atende_unimed?: boolean; tipo?: string }) {
+    // Só aparece para o paciente quem a prefeitura aprovou.
+    const clinics = (await this.buscarClinicas(filters)).filter((clinic: any) => clinic.status_cadastro === 'aprovado');
+    // Filtrado aqui (e não na query) para valer também nos caminhos de
+    // fallback de coluna abaixo, que remontam a query do zero.
+    return filters?.tipo ? clinics.filter((clinic: any) => clinic.tipo === filters.tipo) : clinics;
+  }
+
+  private async buscarClinicas(filters?: { specialization?: string; atende_unimed?: boolean }) {
     try {
       if (filters?.specialization) {
         // Query clinics with specific specialization
@@ -237,10 +253,13 @@ export class ClinicService {
   }
 
   async createClinic(clinicData: ClinicData) {
-    const { nome, endereco, fone, email, imagem, atende_unimed } = clinicData;
+    const { nome, endereco, fone, email, imagem, atende_unimed, tipo } = clinicData;
 
     if (!nome || !email) {
       throw new Error('Dados incompletos: nome e email são obrigatórios');
+    }
+    if (tipo && !TIPOS_CLINICA.includes(tipo)) {
+      throw new Error(`Tipo inválido. Use: ${TIPOS_CLINICA.join(', ')}`);
     }
 
     // Este endpoint apenas insere a linha; ele não cria conta de acesso. Para
@@ -252,6 +271,7 @@ export class ClinicService {
       email,
       imagem,
       atende_unimed: atende_unimed ?? false,
+      ...(tipo ? { tipo } : {}),
     };
 
     let { data, error } = await supabase
@@ -305,7 +325,10 @@ export class ClinicService {
       throw new Error('Código inválido');
     }
 
-    const { nome, endereco, fone, email, senha, imagem, atende_unimed } = updateData;
+    const { nome, endereco, fone, email, senha, imagem, atende_unimed, tipo, aceita_fila_online } = updateData;
+    if (tipo !== undefined && !TIPOS_CLINICA.includes(tipo)) {
+      throw new Error(`Tipo inválido. Use: ${TIPOS_CLINICA.join(', ')}`);
+    }
     const atual = await this.getClinicById(codigo);
 
     // Senha e e-mail de login ficam no Auth. Atualizá-los antes da tabela
@@ -325,6 +348,8 @@ export class ClinicService {
     if (email !== undefined) update.email = email;
     if (imagem !== undefined) update.imagem = imagem;
     if (atende_unimed !== undefined) update.atende_unimed = atende_unimed;
+    if (tipo !== undefined) update.tipo = tipo;
+    if (aceita_fila_online !== undefined) update.aceita_fila_online = aceita_fila_online;
 
     let { data, error } = await supabase
       .from('clinicas')

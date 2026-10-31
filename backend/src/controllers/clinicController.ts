@@ -4,7 +4,9 @@ import { clinicService, ClinicData, UpdateClinicData } from '../services/clinicS
 export class ClinicController {
   async getAllClinics(req: Request, res: Response) {
     try {
+      // ?type= segue o plano (GET /clinics?type=veterinaria); ?tipo= também vale.
       const { specialization, atende_unimed } = req.query;
+      const tipo = (req.query.type ?? req.query.tipo) as string | undefined;
       let atendeUnimedFilter: boolean | undefined;
 
       if (typeof atende_unimed === 'string') {
@@ -19,6 +21,7 @@ export class ClinicController {
       const filters = {
         ...(specialization ? { specialization: specialization as string } : {}),
         ...(atendeUnimedFilter !== undefined ? { atende_unimed: atendeUnimedFilter } : {}),
+        ...(tipo ? { tipo } : {}),
       };
 
       const clinics = await clinicService.getAllClinics(filters);
@@ -52,6 +55,10 @@ export class ClinicController {
   async updateClinic(req: Request, res: Response) {
     try {
       const codigo = Number(req.params.codigo);
+      if (req.user?.entityId !== codigo) {
+        res.status(403).json({ error: 'Você só pode alterar o cadastro da sua clínica.' });
+        return;
+      }
       const updateData: UpdateClinicData = req.body;
       // req.user vem do authenticate; é o id da conta no Supabase Auth, usado
       // quando a atualização mexe em senha ou e-mail de login.
@@ -66,6 +73,10 @@ export class ClinicController {
   async deleteClinic(req: Request, res: Response) {
     try {
       const codigo = Number(req.params.codigo);
+      if (req.user?.entityId !== codigo) {
+        res.status(403).json({ error: 'Você só pode excluir a sua clínica.' });
+        return;
+      }
       const result = await clinicService.deleteClinic(codigo);
       res.json(result);
     } catch (error: any) {

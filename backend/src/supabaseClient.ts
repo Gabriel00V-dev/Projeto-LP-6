@@ -71,6 +71,18 @@ function build(key: string): SupabaseClient {
 export const supabaseAuth: SupabaseClient = build(supabaseKey);
 
 /**
+ * Cliente descartável, sem sessão guardada, para operações que mexem na
+ * sessão de um usuário específico (ex.: refreshSession). Usar o cliente
+ * compartilhado misturaria a sessão de requisições simultâneas.
+ */
+export function novoClienteAuth(): SupabaseClient {
+  return createClient(supabaseUrl, supabaseKey, {
+    ...clientOptions,
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/**
  * Cliente usado para acessar as tabelas. Com a service_role ele passa pelo RLS,
  * que é o esperado de um servidor confiável — o controle de acesso aqui é feito
  * pelo authMiddleware, não pelas policies. Sem a service_role, cai na chave
